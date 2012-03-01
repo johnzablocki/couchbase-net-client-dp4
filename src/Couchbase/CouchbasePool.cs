@@ -280,10 +280,14 @@ namespace Couchbase
 			throw new MemcachedClientException("Could not resolve " + hostname);
 		}
 
-		protected virtual IMemcachedNode CreateNode(IPEndPoint endpoint, ISaslAuthenticationProvider auth, Dictionary<string, object> nodeInfo)
-		{
-			return new BinaryNode(endpoint, this.configuration.SocketPool, auth);
-		}
+        protected IMemcachedNode CreateNode(IPEndPoint endpoint, ISaslAuthenticationProvider auth, Dictionary<string, object> nodeInfo) {
+            string couchApiBase;
+            if (!nodeInfo.TryGetValue("couchApiBase", out couchApiBase)
+                || String.IsNullOrEmpty(couchApiBase))
+                throw new InvalidOperationException("The node configuration does not contain the required 'couchApiBase' attribute.");
+
+            return new CouchbaseNode(endpoint, new Uri(couchApiBase), this.configuration, auth);
+        }
 
 		void IDisposable.Dispose()
 		{
